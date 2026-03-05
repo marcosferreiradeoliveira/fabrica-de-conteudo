@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { generateContentPackage } from './services/geminiService';
 import { GenerationState, ContentConfig, PlatformConfig, Product } from './types';
 import { isSupabaseConfigured } from './lib/supabase';
@@ -6,7 +7,8 @@ import { listProducts, saveProduct, saveContentPackage, listContentHistory } fro
 import type { ContentPackage } from './types';
 import { useAuth } from './context/AuthContext';
 import ResultCard from './components/ResultCard';
-import AuthScreen from './components/AuthScreen';
+import LandingPage from './components/LandingPage';
+import AuthPage from './components/AuthPage';
 
 type PlatformKey = Exclude<keyof Product, 'id' | 'name' | 'productContext' | 'targetAudience' | 'usp' | 'painPoints' | 'restrictions' | 'contentPillar'>;
 
@@ -108,7 +110,16 @@ const App: React.FC = () => {
       );
     }
     if (!user) {
-      return <AuthScreen />;
+      return (
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/signup" element={<AuthPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      );
     }
   }
 
@@ -594,7 +605,7 @@ const App: React.FC = () => {
                 Transforme sua <span className="text-orange-600 italic">ideia bruta</span> em uma máquina de conteúdo.
               </h2>
               <p className="text-lg text-slate-600 mb-8">
-                Dê o tema, e o Oráculo gera pesquisa para ebook, roteiro de podcast, corte de vídeo em JSON, posts e o email perfeito.
+                Dê o tema, e a Content Factory gera pesquisa para ebook, roteiro de podcast, corte de vídeo em JSON, posts e o email perfeito.
               </p>
 
               <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -771,7 +782,7 @@ const App: React.FC = () => {
 
                 {/* Email Marketing */}
                 <ResultCard 
-                  title="Email Marketing (Oráculo Style)" 
+                  title="Email Marketing (Content Factory)" 
                   icon="fa-envelope-open-text" 
                   content={
                     <div className="bg-orange-50/50 p-6 rounded-2xl border-2 border-orange-100 relative overflow-hidden">
@@ -802,7 +813,7 @@ const App: React.FC = () => {
       <footer className="bg-white border-t border-slate-200 py-8 mt-auto">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-slate-500 text-sm flex items-center justify-center gap-2">
-            Desenvolvido com <i className="fas fa-heart text-orange-600"></i> para o Oráculo Cultural.
+            Desenvolvido com <i className="fas fa-heart text-orange-600"></i> para a Content Factory.
           </p>
         </div>
       </footer>
