@@ -27,6 +27,13 @@ create policy "Users manage own products" on public.products
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+-- Permite "reclamar" produtos antigos (user_id null) ao salvar: um único update para setar user_id
+drop policy if exists "Users can claim null user_id products" on public.products;
+create policy "Users can claim null user_id products" on public.products
+  for update
+  using (user_id is null)
+  with check (user_id = auth.uid());
+
 drop policy if exists "Users manage own content_history" on public.content_history;
 create policy "Users manage own content_history" on public.content_history
   for all

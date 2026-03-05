@@ -76,7 +76,29 @@ const App: React.FC = () => {
     });
   }, [step, state.content]);
 
-  // Com Supabase configurado: exige login; sem Supabase segue sem auth
+  // Em produção: sempre exige Supabase + login. Em dev: sem Supabase = app sem auth
+  const isProd = import.meta.env.PROD;
+  if (isProd && !isSupabaseConfigured()) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4 py-12">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-8 max-w-md text-center">
+          <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mx-auto mb-4">
+            <i className="fas fa-cog text-2xl"></i>
+          </div>
+          <h1 className="text-xl font-bold text-slate-800 mb-2">Configure o deploy</h1>
+          <p className="text-slate-600 text-sm mb-6">
+            Para exigir login antes de entrar, defina no painel da Vercel (ou Netlify) as variáveis de ambiente:
+          </p>
+          <code className="block bg-slate-100 rounded-lg px-3 py-2 text-xs text-left text-slate-700 mb-2">
+            VITE_SUPABASE_URL<br />VITE_SUPABASE_ANON_KEY
+          </code>
+          <p className="text-slate-500 text-xs">
+            Depois faça um <strong>Redeploy</strong> (sem cache) para a tela de login aparecer.
+          </p>
+        </div>
+      </div>
+    );
+  }
   if (isSupabaseConfigured()) {
     if (authLoading) {
       return (
@@ -222,8 +244,8 @@ const App: React.FC = () => {
                 </span>
                 <button
                   onClick={() => signOut()}
-                  className="text-sm font-medium text-slate-500 hover:text-red-600 flex items-center gap-1.5"
-                  title="Sair"
+                  className="text-sm font-medium px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50 hover:text-red-600 flex items-center gap-1.5 transition-colors"
+                  title="Sair da conta"
                 >
                   <i className="fas fa-sign-out-alt"></i> Sair
                 </button>
@@ -522,7 +544,17 @@ const App: React.FC = () => {
               ))}
             </div>
 
-            <div className="flex justify-center gap-4 flex-wrap">
+            <div className="flex justify-center items-center gap-4 flex-wrap">
+              {isSupabaseConfigured() && user && (
+                <button
+                  type="button"
+                  onClick={() => signOut()}
+                  className="text-sm font-medium text-slate-500 hover:text-red-600 flex items-center gap-2 py-2"
+                  title="Sair da conta"
+                >
+                  <i className="fas fa-sign-out-alt"></i> Sair da conta
+                </button>
+              )}
               {isSupabaseConfigured() && (
                 <button
                   type="button"

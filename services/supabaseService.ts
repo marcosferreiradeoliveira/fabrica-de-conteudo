@@ -17,6 +17,9 @@ export async function saveProduct(product: Product): Promise<{ error: Error | nu
     return { error: new Error('Supabase não configurado') };
   }
   const userId = await getCurrentUserId();
+  if (!userId) {
+    return { error: new Error('Sessão expirada. Faça login novamente para salvar.') };
+  }
   const { error } = await supabase
     .from(PRODUCTS_TABLE)
     .upsert(
@@ -45,15 +48,17 @@ export async function saveProduct(product: Product): Promise<{ error: Error | nu
   return { error: error ? new Error(error.message) : null };
 }
 
-/** Lista todos os produtos. */
+/** Lista produtos do usuário logado (apenas os que ele criou). */
 export async function listProducts(): Promise<{ data: Product[] | null; error: Error | null }> {
   if (!isSupabaseConfigured() || !supabase) {
     return { data: null, error: new Error('Supabase não configurado') };
   }
-  const { data, error } = await supabase
-    .from(PRODUCTS_TABLE)
-    .select('*')
-    .order('updated_at', { ascending: false });
+  const userId = await getCurrentUserId();
+  let query = supabase.from(PRODUCTS_TABLE).select('*');
+  if (userId) {
+    query = query.eq('user_id', userId);
+  }
+  const { data, error } = await query.order('updated_at', { ascending: false });
   if (error) return { data: null, error: new Error(error.message) };
   const products: Product[] = (data || []).map((row: any) => ({
     id: row.id,

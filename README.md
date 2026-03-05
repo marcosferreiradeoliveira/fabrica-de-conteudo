@@ -48,11 +48,13 @@ O Supabase é o **backend** (banco, auth). O frontend (este app) pode ser hosped
 
 1. Faça push do projeto para um repositório GitHub.
 2. Em [vercel.com](https://vercel.com) → **Add New Project** → importe o repo.
-3. Em **Environment Variables** defina:
+3. **Antes do primeiro deploy**, em **Environment Variables** defina:
    - `GEMINI_API_KEY` – chave do Gemini
-   - `VITE_SUPABASE_URL` – URL do projeto Supabase
-   - `VITE_SUPABASE_ANON_KEY` – chave anônima do Supabase
+   - `VITE_SUPABASE_URL` – URL do projeto Supabase (ex.: `https://xxx.supabase.co`)
+   - `VITE_SUPABASE_ANON_KEY` – chave anônima (publishable) do Supabase
 4. Deploy. A Vercel usa o `vercel.json` para SPA (todas as rotas → `index.html`).
+
+**Importante:** Sem `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` no ambiente da Vercel, o app **não pede login** e abre direto na Configuração. Defina as duas variáveis e faça **Redeploy** (Deployments → ⋮ → Redeploy) para a tela de login aparecer.
 
 ### Opção 2: Netlify
 
@@ -62,7 +64,9 @@ O Supabase é o **backend** (banco, auth). O frontend (este app) pode ser hosped
    - `GEMINI_API_KEY`
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-4. Deploy. O `netlify.toml` já está configurado para SPA.
+4. Deploy (ou **Trigger deploy** depois de salvar as variáveis). O `netlify.toml` já está configurado para SPA.
+
+**Importante:** Sem as variáveis do Supabase, o app não exige login. Configure-as e faça um novo deploy.
 
 ### Opção 3: Supabase Storage (apenas para arquivos estáticos)
 
