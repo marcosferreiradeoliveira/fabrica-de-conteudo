@@ -1,23 +1,42 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { ContentPackage, ContentConfig } from "../types";
+import type { ContentPackage, ContentConfig } from "../types";
 
-const getApiKey = (): string =>
-  (typeof process !== "undefined" && process.env?.API_KEY) ||
-  (typeof process !== "undefined" && process.env?.GEMINI_API_KEY) ||
-  (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_GEMINI_API_KEY) ||
-  "";
+const API_PATH = "/api/generate-content";
 
-export const generateContentPackage = async (idea: string, config: ContentConfig): Promise<ContentPackage> => {
-  const apiKey = getApiKey();
-  if (!apiKey || apiKey.trim() === "") {
+/** Em produção usa a API (chave só no servidor). Em dev usa a chave local se existir. */
+export async function generateContentPackage(
+  idea: string,
+  config: ContentConfig
+): Promise<ContentPackage> {
+  const isProd = import.meta.env.PROD;
+
+  if (isProd) {
+    const res = await fetch(API_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idea, config }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data?.error || "Não foi possível gerar o conteúdo. Tente novamente.");
+    }
+    return res.json();
+  }
+
+  // Desenvolvimento: chave só no .env local (não vai para o build de produção)
+  const apiKey =
+    (import.meta as any).env?.VITE_GEMINI_API_KEY ||
+    (typeof process !== "undefined" && (process.env?.GEMINI_API_KEY ?? process.env?.API_KEY)) ||
+    "";
+  if (!apiKey?.trim()) {
     throw new Error(
-      "Chave da API Gemini não configurada. Adicione GEMINI_API_KEY no arquivo .env na raiz do projeto (obtenha em https://aistudio.google.com/apikey)."
+      "Em desenvolvimento: adicione GEMINI_API_KEY ou VITE_GEMINI_API_KEY no .env. Em produção a chave fica só no servidor (Vercel)."
     );
   }
 
-  const ai = new GoogleGenAI({ apiKey });
-  const model = 'gemini-3-pro-preview';
-  
+  const ai = new GoogleGenAI({ apiKey: apiKey.trim() });
+  const model = "gemini-2.0-flash";
+
   const systemInstruction = `
     Você é um estrategista de conteúdo sênior.
     Seu objetivo é transformar uma ideia/tema em um pacote de conteúdo completo para o seguinte contexto:
@@ -81,10 +100,10 @@ export const generateContentPackage = async (idea: string, config: ContentConfig
 
   try {
     const response = await ai.models.generateContent({
-      model: model,
+      model,
       contents: prompt,
       config: {
-        systemInstruction: systemInstruction,
+        systemInstruction,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -101,35 +120,35 @@ export const generateContentPackage = async (idea: string, config: ContentConfig
                     type: Type.OBJECT,
                     properties: {
                       title: { type: Type.STRING },
-                      notes: { type: Type.STRING }
+                      notes: { type: Type.STRING },
                     },
-                    required: ["title", "notes"]
-                  }
+                    required: ["title", "notes"],
+                  },
                 },
-                conclusion: { type: Type.STRING }
+                conclusion: { type: Type.STRING },
               },
-              required: ["title", "introduction", "segments", "conclusion"]
+              required: ["title", "introduction", "segments", "conclusion"],
             },
             videoScriptJson: { type: Type.STRING },
             socialMedia: {
               type: Type.OBJECT,
               properties: {
                 instagram: { type: Type.STRING },
-                linkedin: { type: Type.STRING }
+                linkedin: { type: Type.STRING },
               },
-              required: ["instagram", "linkedin"]
+              required: ["instagram", "linkedin"],
             },
-            emailMarketing: { type: Type.STRING }
+            emailMarketing: { type: Type.STRING },
           },
-          required: ["ebookResearch", "podcastScript", "videoScriptJson", "socialMedia", "emailMarketing"]
-        }
-      }
+          required: ["ebookResearch", "podcastScript", "videoScriptJson", "socialMedia", "emailMarketing"],
+        },
+      },
     });
 
-    const result = JSON.parse(response.text);
+    const result = JSON.parse(response.text ?? "{}");
     return result;
   } catch (error) {
     console.error("Erro na geração do Gemini:", error);
     throw new Error("Não foi possível gerar o conteúdo. Tente novamente.");
   }
-};
+}
