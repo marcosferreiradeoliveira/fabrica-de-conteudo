@@ -143,13 +143,31 @@ export async function POST(request: Request) {
       },
     });
 
-    const text = response.text ?? "";
-    const result = JSON.parse(text);
+    const text = (response as any).text ?? "";
+    if (!text) {
+      return Response.json(
+        { error: "Resposta vazia do Gemini. Tente outro tema." },
+        { status: 500 }
+      );
+    }
+    let result: unknown;
+    try {
+      result = JSON.parse(text);
+    } catch {
+      return Response.json(
+        { error: "Resposta do Gemini em formato inválido.", detail: "JSON parse error" },
+        { status: 500 }
+      );
+    }
     return Response.json(result);
-  } catch (err) {
+  } catch (err: any) {
+    const message = err?.message ?? String(err);
     console.error("Erro Gemini na API:", err);
     return Response.json(
-      { error: "Não foi possível gerar o conteúdo. Tente novamente." },
+      {
+        error: "Não foi possível gerar o conteúdo. Tente novamente.",
+        detail: message,
+      },
       { status: 500 }
     );
   }

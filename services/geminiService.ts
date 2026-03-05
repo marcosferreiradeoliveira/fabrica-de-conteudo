@@ -18,7 +18,8 @@ export async function generateContentPackage(
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data?.error || "Não foi possível gerar o conteúdo. Tente novamente.");
+      const msg = data?.detail ? `${data.error} (${data.detail})` : (data?.error || "Não foi possível gerar o conteúdo. Tente novamente.");
+      throw new Error(msg);
     }
     return res.json();
   }
