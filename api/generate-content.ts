@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const MODEL = "gemini-2.0-flash";
+const MODEL = "gemini-2.5-flash";
 
 export const config = { runtime: "nodejs" };
 

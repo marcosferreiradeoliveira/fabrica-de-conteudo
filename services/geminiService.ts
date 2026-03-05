@@ -36,7 +36,7 @@ export async function generateContentPackage(
   }
 
   const ai = new GoogleGenAI({ apiKey: apiKey.trim() });
-  const model = "gemini-2.0-flash";
+  const model = "gemini-2.5-flash";
 
   const systemInstruction = `
     Você é um estrategista de conteúdo sênior.
